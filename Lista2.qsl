@@ -1,0 +1,105 @@
+1)SELECT 
+	MONTH(v.data_venda) AS Mês, 
+	COUNT(v.codvenda) AS N'Número de vendas realizadas no mês',  
+	AVG(i.valor) AS N'Valor médio das vendas do mês', 
+	SUM(i.valor) AS N'Valor total das vendas do mês', 
+FROM vendas v INNER JOIN itens i ON v.codvenda = i.codvenda 
+GROUP BY MONTH(data_venda) 
+WHERE YEAR(data_venda) = ?
+ORDER BY Mês;
+
+2)SELECT
+	p.produto,
+	p.codproduto,
+	v.data_venda,
+	i.quantidade,
+	i.valor,
+	v.codvenda,
+	c.nome,
+	ven.nome_vendedor
+FROM vendas v INNER JOIN itens i ON v.codvenda = i.codvenda 
+INNER JOIN tabprodutos p ON i.codproduto = p.codproduto
+INNER JOIN clientes c ON c.codcliente = v.codcliente
+INNER JOIN vendedores ven ON ven.cod_vendedor = v.cod_vendedor
+WHERE v.data_venda >= ? AND v.data_venda <= ?
+ORDER BY p.produto ASC, v.data_venda ASC;
+
+3)SELECT
+	e.estado,
+	c.cidade,
+	c.bairro,
+	SUM(c.codcliente) AS N'Total de Clientes'
+FROM clientes c INNER JOIN estados e ON c.uf = e.uf
+GROUP BY e.estado
+HAVING COUNT(c.codcliente) = ?
+--WHERE/*NENHUM SGBDR CONSEGUE USAR O OPERADOR BETWEEN COM VALORES NÃO NÚMERICOS*/;
+
+4)SELECT
+	ven.nome_vendedor,
+	MAX(v.data_venda) AS N'Data da venda mais recente no período',
+	MIN(v.data_venda) AS N'Data da venda mais antiga no período',
+	COUNT(v.idvenda) AS N'Número de vendas realizadas pelo vendedor no período',
+	AVG(v.codvenda) AS N' Média das Vendas do Vendedor no período',
+	SUM(v.codvenda) AS N'Total das Vendas do Vendedor no período'
+FROM vendas v INNER JOIN vendedores ven ON v.cod_vendedor = ven.cod_vendedor
+INNER JOIN itens i ON v.codvenda = i.codvenda
+WHERE v.data_venda >= ? AND v.data_venda <= ? AND SUM(i.valor) >= ? AND SUM(i.valor) <= ?
+ORDER BY ven.nome ASC;
+
+5)SELECT
+	c.nome,
+	c.codcliente,
+	c.cidade,
+	c.uf
+FROM clientes c
+WHERE EXISTS(SELECT 1 FROM vendas v WHERE v.data_venda BETWEEN ? AND ?)
+ORDER BY c.nome ASC;
+
+6)SELECT
+	c.nome,
+	p.produto,
+	v.data_venda,
+	v.codvenda,
+	i.quantidade,
+	i.valor
+FROM vendas v INNER JOIN itens i ON v.codvenda = i.codvenda INNER JOIN tabprodutos p ON p.codproduto = i.codproduto INNER JOIN clientes c ON c.codcliente = v.codcliente,
+WHERE c.nome LIKE '%?%' AND v.data_venda >= ? AND v.data_venda <= ?
+ORDER BY c.nome ASC, p.produto ASC, v.data_venda;
+
+7)SELECT TOP 1
+	v.codvenda,
+	c.nome,
+	ven.nome_vendedor,
+	v.data_venda,
+	p.produto,
+	i.quantidade,
+	i.valor
+FROM vendas v INNER JOIN itens i ON v.codvenda = i.codvenda INNER JOIN tabprodutos p ON p.codproduto = i.codproduto INNER JOIN clientes c ON c.codcliente = v.codcliente,
+WHERE c.codvenda > ?
+ORDER BY v.codvenda;
+
+8)SELECT TOP 1
+	v.codvenda,
+	c.nome,
+	ven.nome_vendedor,
+	v.data_venda,
+	p.produto,
+	i.quantidade,
+	i.valor
+FROM vendas v INNER JOIN itens i ON v.codvenda = i.codvenda INNER JOIN tabprodutos p ON p.codproduto = i.codproduto INNER JOIN clientes c ON c.codcliente = v.codcliente,
+WHERE c.codvenda < ?
+ORDER BY v.codvenda;
+
+9)UPDATE tabproduto SET dataPreco = GETDATE(), preco_unidade = ? WHERE codproduto = ?;
+
+
+10)SELECT
+	c.nome,
+	MIN(v.data_venda) AS N'data da primeira venda do cliente no período',
+	MAX(v.data_venda) AS N'data da ultima venda do cliente no período',
+	COUNT(v.data_venda) AS N'Numero de vendas realizadas no período',
+	AVG(v.data_venda) AS N'Média da Vendas',
+	SUM(v.data_venda) AS N'Total de Vendas',
+FROM vendas v INNER JOIN clientes c ON c.codcliente = v.codcliente
+WHERE v.data_venda BETWEEN ? AND ?
+ORDER BY c.nome;
